@@ -26,7 +26,7 @@ The easiest way to try the service is using the pre‑built image and `docker-co
 
 ```bash
 # Download docker-compose.yml
-curl -O https://raw.githubusercontent.com/yourusername/alt-repoteka-service/main/docker-compose.yml
+curl -O https://raw.githubusercontent.com/Eddi-cry/alt-repoteka-service/main/docker-compose.yml
 
 # Start PostgreSQL and the API
 docker-compose up -d
