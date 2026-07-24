@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: repoteka-loader
+  namespace: repoteka
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: loader
+        image: maksonchikw67/repoteka-service:latest  
+        command: ["python3", "-m", "src.cli.main", "load"]
+        env:
+        - name: DB_HOST
+          value: postgres-service
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: password
+        - name: DB_NAME
+          value: repoteka
+        - name: DB_USER
+          value: postgres
+        - name: DB_PORT
+          value: "5432"

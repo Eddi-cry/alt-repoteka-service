@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: repoteka-api
+  namespace: repoteka
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: repoteka-api
+  template:
+    metadata:
+      labels:
+        app: repoteka-api
+    spec:
+      containers:
+      - name: api
+        image: maksonchikw67/repoteka-service:latest   
+        command: ["python3", "-m", "src.cli.main", "serve"]
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DB_HOST
+          value: postgres-service
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: password
+        - name: DB_NAME
+          value: repoteka
+        - name: DB_USER
+          value: postgres
+        - name: DB_PORT
+          value: "5432"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5

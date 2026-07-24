@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: repoteka-config
+  namespace: repoteka
+data:
+  config.yaml: |
+    database:
+      host: postgres-service
+      port: 5432
+      name: repoteka
+      user: postgres
+    repoteka:
+      url: https://rdb.altlinux.org/repoteka
+    api:
+      host: 0.0.0.0
+      port: 8000
