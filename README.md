@@ -59,7 +59,7 @@ apt-get update
 apt-get install -y python3 python3-pip postgresql postgresql-contrib
 
 # Clone the repository
-git clone https://github.com/yourusername/alt-repoteka-service.git
+git clone https://github.com/Eddi-cry/alt-repoteka-service.git
 cd alt-repoteka-service
 
 # Install Python dependencies
