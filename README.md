@@ -8,7 +8,7 @@ Service for tracking package versions across ALT Linux repositories.
 
 This project consists of two components:
 
-- **Loader** – fetches package metadata from the public [Repoteka API](https://rdb.altlinux.org/repoteka) and stores it in PostgreSQL.
+- **Loader** – fetches package metadata from the public [Repoteka API]([https://rdb.altlinux.org/repoteka](https://rdb.altlinux.org/repoteka/openapi.json)) and stores it in PostgreSQL.
 - **API** – a FastAPI application that answers three questions about package versions and repositories.
 
 The service is designed to run in Kubernetes with horizontal scaling (3 replicas of the API).
