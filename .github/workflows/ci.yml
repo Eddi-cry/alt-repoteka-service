@@ -1,16 +1,14 @@
-name: CI/CD Pipeline
+name: CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
 
 jobs:
   lint-and-test:
-    name: Lint and Test
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -18,32 +16,25 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'  # Или '3.12', в зависимости от твоей основной версии
-          cache: 'pip'
+          python-version: '3.11' # Можно указать 3.12 или 3.13, если используешь их
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          # Устанавливаем все dev-зависимости из pyproject.toml (включая ruff, black, mypy, pytest)
           pip install -e ".[dev]"
 
-      - name: Check code formatting (Black)
+      - name: Check formatting with Black
         run: black --check .
 
-      - name: Check import sorting (isort)
-        run: isort --check .
+      - name: Check imports with isort
+        run: isort --check-only --diff .
 
-      - name: Lint code (Ruff)
+      - name: Lint with Ruff
         run: ruff check .
 
-      - name: Type checking (mypy)
-        run: mypy src/
+      - name: Type check with MyPy
+        run: mypy src tests
 
-      - name: Run tests with coverage
-        run: |
-          pytest tests/ -v --cov=src --cov-report=xml --cov-report=term-missing
-
-      - name: Upload coverage to Codecov (опционально, но круто выглядит)
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./coverage.xml
-          fail_ci_if_error: false
+      - name: Run tests with Pytest
+        run: pytest tests/ -v --cov=src --cov-report=term-missing
