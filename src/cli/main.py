@@ -10,7 +10,6 @@ from src.loader.main import PackageLoader
 @click.group()
 def cli():
     """ALT Repoteka Service CLI"""
-    pass
 
 
 @cli.command()

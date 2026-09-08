@@ -148,3 +148,21 @@ omit = [
 precision = 2
 show_missing = true
 skip_covered = false
+
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "PIE", "FA", "BLE", "DTZ"]
+ignore = [
+    "B008",   # FastAPI требует Depends() и Query() именно в аргументах по умолчанию
+    "BLE001", # Ловля Exception допустима для верхнеуровневой обработки ошибок в CLI/API
+    "DTZ001", # Использование timezone-naive datetime допустимо в рамках этого ТЗ
+    "DTZ005",
+    "DTZ006",
+    "SIM102", # Вложенные if иногда читаются лучше, чем длинные строки с and
+    "FA100",  # Добавление __future__ annotations является вкусовщиной
+    "E501",   # Black уже контролирует длину строк, двойной контроль избыточен
+]
