@@ -1,9 +1,8 @@
-name: Build and Publish Docker Image
+﻿name: Build and Publish Docker Image
 
 on:
   push:
     branches: [ main ]
-    tags: [ 'v*' ]
 
 jobs:
   build-and-push:
@@ -25,5 +24,5 @@ jobs:
           file: docker/Dockerfile
           push: true
           tags: |
-            Eddi-cry/repoteka-service:latest
-            Eddi-cry/repoteka-service:${{ github.sha }}
+            maksonchikw67/repoteka-service:latest
+            maksonchikw67/repoteka-service:${{ github.sha }}
