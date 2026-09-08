@@ -3,25 +3,68 @@ kind: Job
 metadata:
   name: repoteka-loader
   namespace: repoteka
+  labels:
+    app: repoteka-loader
+    component: loader
 spec:
+  # Don't create new pods after failure
+  backoffLimit: 2
+
+  # Clean up completed jobs after 1 hour
+  ttlSecondsAfterFinished: 3600
+
   template:
+    metadata:
+      labels:
+        app: repoteka-loader
+        component: loader
     spec:
-      restartPolicy: Never
+      restartPolicy: OnFailure
+
       containers:
       - name: loader
-        image: maksonchikw67/repoteka-service:latest  
+        image: maksonchikw67/repoteka-service:latest
+        imagePullPolicy: Always
         command: ["python3", "-m", "src.cli.main", "load"]
+
+        # Environment variables from ConfigMap and Secret
         env:
         - name: DB_HOST
-          value: postgres-service
+          valueFrom:
+            configMapKeyRef:
+              name: repoteka-config
+              key: db_host
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: repoteka-config
+              key: db_port
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: repoteka-config
+              key: db_name
+        - name: DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: repoteka-config
+              key: db_user
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
               name: db-secrets
               key: password
-        - name: DB_NAME
-          value: repoteka
-        - name: DB_USER
-          value: postgres
-        - name: DB_PORT
-          value: "5432"
+        - name: REPOTEKA_URL
+          valueFrom:
+            configMapKeyRef:
+              name: repoteka-config
+              key: repoteka_url
+
+        # Resource limits for loader job
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 2Gi

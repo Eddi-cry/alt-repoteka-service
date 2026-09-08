@@ -3,8 +3,16 @@ kind: Deployment
 metadata:
   name: repoteka-api
   namespace: repoteka
+  labels:
+    app: repoteka-api
+    component: api
 spec:
   replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0  # Zero downtime deployment
   selector:
     matchLabels:
       app: repoteka-api
@@ -12,36 +20,102 @@ spec:
     metadata:
       labels:
         app: repoteka-api
+        component: api
     spec:
       containers:
       - name: api
-        image: maksonchikw67/repoteka-service:latest   
+        image: maksonchikw67/repoteka-service:latest
+        imagePullPolicy: Always
         command: ["python3", "-m", "src.cli.main", "serve"]
         ports:
-        - containerPort: 8000
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+
+        # Environment variables from ConfigMap and Secret
         env:
         - name: DB_HOST
-          value: postgres-service
+          valueFrom:
+            configMapKeyRef:
+              name: repoteka-config
+              key: db_host
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: repoteka-config
+              key: db_port
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: repoteka-config
+              key: db_name
+        - name: DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: repoteka-config
+              key: db_user
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
               name: db-secrets
               key: password
-        - name: DB_NAME
-          value: repoteka
-        - name: DB_USER
-          value: postgres
-        - name: DB_PORT
-          value: "5432"
+        - name: REPOTEKA_URL
+          valueFrom:
+            configMapKeyRef:
+              name: repoteka-config
+              key: repoteka_url
+        - name: API_HOST
+          value: "0.0.0.0"
+        - name: API_PORT
+          value: "8000"
+
+        # Resource limits and requests
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+        # Liveness probe - check if app is alive
+        # Longer timeout to avoid killing pod during slow queries
         livenessProbe:
           httpGet:
             path: /health
-            port: 8000
+            port: http
           initialDelaySeconds: 30
-          periodSeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+        # Readiness probe - check if app is ready to serve traffic
         readinessProbe:
           httpGet:
             path: /ready
-            port: 8000
+            port: http
           initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 2
+
+        # Startup probe - for slow-starting containers
+        startupProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 0
           periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30  # 30 * 5 = 150 seconds max startup time
+
+      # Don't schedule multiple pods on the same node
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: repoteka-api
+              topologyKey: kubernetes.io/hostname

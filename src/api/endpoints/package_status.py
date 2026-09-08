@@ -1,12 +1,15 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlalchemy.orm import Session, joinedload
-from typing import List
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
+from ...db.models import Package
 from ...db.session import get_db
-from ...db.models import Package, Branch
+from ...utils.formatting import format_evr
 from ...utils.version_compare import compare_evr
 
 router = APIRouter()
+
 
 @router.get("/api/package-status")
 async def check_package_status(
@@ -15,33 +18,46 @@ async def check_package_status(
     target_epoch: int = Query(0, description="Целевая эпоха"),
     target_version: str = Query(..., description="Целевая версия"),
     target_release: str = Query(..., description="Целевой релиз"),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
-    # Question #1: Find the branches where the package version is behind the specified version
+    """
+    Question #1: Find branches where package version is older than target.
+    """
+    # Query packages with eager loading of branch relationship
+    stmt = (
+        select(Package)
+        .options(joinedload(Package.branch))
+        .where(Package.name == package_name, Package.kind == package_type)
+    )
+    result = await db.execute(stmt)
+    packages = result.scalars().unique().all()
 
-    # Use joinedload to load a linked branch
-    packages = db.query(Package).options(joinedload(Package.branch)).filter(
-        Package.name == package_name,
-        Package.kind == package_type
-    ).all()
-    
     outdated_branches = []
     for pkg in packages:
-        is_older = compare_evr(
-            pkg.epoch or 0, pkg.version, pkg.release,
-            target_epoch, target_version, target_release
-        ) < 0
-        
+        is_older = (
+            compare_evr(
+                pkg.epoch or 0,
+                pkg.version,
+                pkg.release,
+                target_epoch,
+                target_version,
+                target_release,
+            )
+            < 0
+        )
+
         if is_older and pkg.branch:
-            outdated_branches.append({
-                "branch": pkg.branch.name,
-                "current_version": f"{pkg.epoch}:{pkg.version}-{pkg.release}" if pkg.epoch else f"{pkg.version}-{pkg.release}",
-                "arch": pkg.arch
-            })
-    
+            outdated_branches.append(
+                {
+                    "branch": pkg.branch.name,
+                    "current_version": format_evr(pkg.epoch, pkg.version, pkg.release),
+                    "arch": pkg.arch,
+                }
+            )
+
     return {
         "package": package_name,
         "type": package_type,
-        "target": f"{target_epoch}:{target_version}-{target_release}",
-        "outdated_in": outdated_branches
+        "target": format_evr(target_epoch, target_version, target_release),
+        "outdated_in": outdated_branches,
     }

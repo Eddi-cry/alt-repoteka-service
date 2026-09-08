@@ -2,7 +2,7 @@
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/maksonchikw67/repoteka-service)](https://hub.docker.com/r/maksonchikw67/repoteka-service)
 
-Service for tracking package versions across ALT Linux repositories.  
+Service for tracking package versions across ALT Linux repositories.
 It fetches metadata from the public [Repoteka API](https://rdb.altlinux.org/repoteka/openapi.json), stores it in PostgreSQL, and provides a FastAPI interface to answer three specific questions about package versions and repository branches.
 
 ## Overview
@@ -228,7 +228,7 @@ curl "http://localhost:8000/api/outdated-days?packages=curl&packages=openssl"
 docker build -f docker/Dockerfile -t repoteka-service:latest .
 ```
 
-The image is based on `registry.altlinux.org/sisyphus/alt` and includes all necessary Python modules.  
+The image is based on `registry.altlinux.org/sisyphus/alt` and includes all necessary Python modules.
 A pre‑built image is available at `maksonchikw67/repoteka-service:latest`.
 
 ### Run the API container
@@ -297,4 +297,3 @@ Then test with `curl` as shown in the API examples.
 ## Repository
 
 Source code: [https://github.com/Eddi-cry/alt-repoteka-service](https://github.com/Eddi-cry/alt-repoteka-service)
-
