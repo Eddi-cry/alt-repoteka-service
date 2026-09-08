@@ -293,7 +293,3 @@ kubectl port-forward -n repoteka service/repoteka-api 8000:8000
 ```
 
 Then test with `curl` as shown in the API examples.
-
-## Repository
-
-Source code: [https://github.com/Eddi-cry/alt-repoteka-service](https://github.com/Eddi-cry/alt-repoteka-service)
